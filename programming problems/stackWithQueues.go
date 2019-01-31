@@ -59,21 +59,20 @@ func (q *Queue) Top() int {
 /* ------------------------------------------------- */
 
 type Stack struct {
-	q1 			 *Queue
-	q2 			 *Queue
 	popFromQueue *Queue
+	pushToQueue  *Queue
 }
 
 func (s *Stack) Size() int {
-	return s.q1.Size + s.q2.Size
+	return s.popFromQueue.Size + s.pushToQueue.Size
 }
 
 func (s *Stack) IsEmpty() bool {
-	return s.q1.IsEmpty() && s.q2.IsEmpty()
+	return s.popFromQueue.IsEmpty() && s.pushToQueue.IsEmpty()
 }
 
 func (s *Stack) IsFull() bool {
-	return s.q1.IsFull() && s.q2.IsFull()
+	return s.popFromQueue.IsFull() && s.pushToQueue.IsFull()
 }
 
 func (s *Stack) Push(Value int) {
@@ -81,7 +80,7 @@ func (s *Stack) Push(Value int) {
 }
 
 func (s *Stack) Pop() int {
-
+	return -1
 }
 
 func (s *Stack) Top() int {
