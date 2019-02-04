@@ -4,7 +4,7 @@ import (
     "fmt"
 )
 
-const MAX_QUEUE_SIZE = 2
+const MAX_QUEUE_SIZE = 20
 
 type Queue struct {
 	Contents 	[MAX_QUEUE_SIZE]int
@@ -53,62 +53,74 @@ func (q *Queue) Top() int {
 		return -1
 	}
 
-	return q.Contents[q.PopIndex]	
+	return q.Contents[q.PopIndex]
 }
 
 /* ------------------------------------------------- */
 
 type Stack struct {
-	popFromQueue *Queue
-	pushToQueue  *Queue
+	primaryQueue 	*Queue
+	secondaryQueue  *Queue
 }
 
 func (s *Stack) Size() int {
-	return s.popFromQueue.Size + s.pushToQueue.Size
+	return s.primaryQueue.Size + s.secondaryQueue.Size
 }
 
 func (s *Stack) IsEmpty() bool {
-	return s.popFromQueue.IsEmpty() && s.pushToQueue.IsEmpty()
+	return s.primaryQueue.IsEmpty() && s.secondaryQueue.IsEmpty()
 }
 
 func (s *Stack) IsFull() bool {
-	return s.popFromQueue.IsFull() && s.pushToQueue.IsFull()
+	return s.primaryQueue.IsFull() && s.secondaryQueue.IsFull()
 }
 
 func (s *Stack) Push(Value int) {
-	s.popFromQueue.Pop()
+	if (!s.primaryQueue.IsEmpty()) {
+		s.secondaryQueue.Push(s.primaryQueue.Pop())
+	}
+
+	s.primaryQueue.Push(Value)	
 }
 
 func (s *Stack) Pop() int {
-	return -1
+	if (s.IsEmpty()) {
+		return -1	
+	}
+	
+	poppedValue := s.primaryQueue.Pop();
+
+	for i := 0; i < s.secondaryQueue.Size - 1; i++ {
+		s.primaryQueue.Push(s.secondaryQueue.Pop())
+	}
+
+	tempQueuePointer := s.primaryQueue
+	s.primaryQueue   = s.secondaryQueue
+	s.secondaryQueue = tempQueuePointer
+
+	return poppedValue
 }
 
 func (s *Stack) Top() int {
-	return s.popFromQueue.Top()
+	return s.primaryQueue.Top()
 }
 
 /* ------------------------------------------------- */
 
 func main() {
-	q := &Queue{}
+	s := &Stack{primaryQueue: &Queue{} , secondaryQueue: &Queue{} }
 
-	for i:=0; i < 5; i++ {
-		q.Push(i)
-	}
+	s.Push(3)
+	s.Push(5)
+	s.Push(7)
 
-	for !q.IsEmpty() {
-		value := q.Pop()
-		fmt.Printf("%d\n", value)
-	}
-
-	for i:=0; i < 5; i++ {
-		q.Push(i)
-	}
-
-	for !q.IsEmpty() {
-		value := q.Pop()
-		fmt.Printf("%d\n", value)
-	}
+	fmt.Println(s.Pop())
+	fmt.Println(s.Pop())
+	fmt.Println(s.Pop())
+	fmt.Println(s.IsEmpty())
+	fmt.Println(s.Pop())
+	fmt.Printf("------------>  primary %v\n", s.primaryQueue)
+	fmt.Printf("------------>  secondary %v\n", s.secondaryQueue)
 
 	fmt.Printf("Done!\n")
 }
