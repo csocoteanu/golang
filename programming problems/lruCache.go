@@ -38,11 +38,7 @@ func (source *LRUCacheEntry) SwapNodes(destination *LRUCacheEntry) (*LRUCacheEnt
 		source.Next = destination.Next
 		destination.Next = temp
 
-		temp = source
-		source = destination
-		destination = temp
-
-		return source, destination
+		return destination, source
 	}
 
 	prevSource 		:= source.Prev
@@ -64,7 +60,7 @@ func (source *LRUCacheEntry) SwapNodes(destination *LRUCacheEntry) (*LRUCacheEnt
 	source.Next = nextDestination
 	if (nextDestination != nil) { nextDestination.Prev = source }
 
-	return source, destination
+	return destination, source
 }
 
 func (l *LRUCacheEntry) MoveNodeToHead(node *LRUCacheEntry) *LRUCacheEntry {
@@ -143,25 +139,28 @@ func testLRUCacheEntry() {
 	head.PrintNextNodes()
 	tail.PrintPrevNodes()
 
-	_, head = head.SwapNodes(node1)
+	/*head, _ = head.SwapNodes(node1)
+	head.PrintNextNodes()
+
+	head, _ = head.SwapNodes(node2)
 	head.PrintNextNodes()
 
 	return
-	_, head = head.SwapNodes(node2)
-	head.PrintNextNodes()
-
-	_, head = head.SwapNodes(node4)
+	head, _ = head.SwapNodes(node4)
 	head.PrintNextNodes()
 
 	return
-	/*head = head.SwapNodes(node2)
+	
+	head = head.SwapNodes(node2)
 	head.PrintNextNodes()
 
-	head = head.SwapNodes(node3)
+	return*/
+
+	head, _ = head.SwapNodes(node3)
 	head.PrintNextNodes()
 
-	head = head.SwapNodes(node4)
-	head.PrintNextNodes()*/
+	head, _ = head.SwapNodes(node4)
+	head.PrintNextNodes()
 }
 
 /* ------------------------------------------------ */
@@ -194,7 +193,8 @@ func (cache *LRUCache) Set(key, value int) {
 	} else {
 
 		cache.Contents[index].Value = value
-		cache.Tail = cache.Tail.MoveNodeToHead(cache.Contents[index])
+		//temp := cache.Tail
+		//cache.Tail, _ = temp.SwapNodes(cache.Contents[index])
 	}
 }
 
@@ -207,7 +207,7 @@ func (cache *LRUCache) Get(key int) int {
 		return -1
 	}
 
-	cache.Head = cache.Head.MoveNodeToHead(cache.Contents[index])
+	cache.Head, _ = cache.Head.SwapNodes(cache.Contents[index])
 
 	return value.Value
 }
@@ -224,10 +224,10 @@ func testLRUCache() {
 	cache.Set(2, 19)
 	
 	fmt.Printf("------------->%d\n", cache.Get(2))
-	//fmt.Printf("------------->%d\n", cache.Get(0))
+	fmt.Printf("------------->%d\n", cache.Get(0))
 
-	// cache.Head.PrintNextNodes()
-	//cache.Tail.PrintPrevNodes()
+	cache.Head.PrintNextNodes()
+	cache.Tail.PrintPrevNodes()
 }
 
 /* ------------------------------------------------ */
