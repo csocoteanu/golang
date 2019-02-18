@@ -12,11 +12,11 @@ type LRUCacheEntry struct {
 	Next 	   *LRUCacheEntry
 }
 
-func (l *LRUCacheEntry) Add(node *LRUCacheEntry) {
+func (l *LRUCacheEntry) Add(node *LRUCacheEntry) *LRUCacheEntry {
 
 	if (node == nil) {
 
-		return
+		return nil
 	}
 
 	trailingNode := l.Next
@@ -24,11 +24,58 @@ func (l *LRUCacheEntry) Add(node *LRUCacheEntry) {
 	l.Next = node
 	node.Prev = l
 	node.Next = trailingNode
+
+	return node
+}
+
+func (source *LRUCacheEntry) SwapNodes(destination *LRUCacheEntry) (*LRUCacheEntry, *LRUCacheEntry) {
+	
+	if (source == destination) { return source, source }
+
+	if (source.Next == destination) {
+
+		temp := source
+		source.Next = destination.Next
+		destination.Next = temp
+
+		temp = source
+		source = destination
+		destination = temp
+
+		return source, destination
+	}
+
+	prevSource 		:= source.Prev
+	nextSource 	    := source.Next
+	prevDestination := destination.Prev
+	nextDestination := destination.Next
+
+	// set destination links
+	if (prevSource != nil) { prevSource.Next = destination }
+	destination.Prev = prevSource
+
+	destination.Next = nextSource
+	if (nextSource != nil) { nextSource.Prev = destination }
+
+	// set source links
+	if (prevDestination != nil) { prevDestination.Next = source }
+	source.Prev = prevDestination
+
+	source.Next = nextDestination
+	if (nextDestination != nil) { nextDestination.Prev = source }
+
+	return source, destination
 }
 
 func (l *LRUCacheEntry) MoveNodeToHead(node *LRUCacheEntry) *LRUCacheEntry {
 
-	headingNode := l.Prev
+	// fmt.Printf("--> MoveNodeToHead: head=%d, node=%d, node == head -> %v\n", l.Value, node.Value, l == node)
+
+	if (node == nil) { return nil }
+
+	if (l == node) { return l }
+
+	headingNode  := l.Prev
 	trailingNode := l.Next
 
 	movedNodePrev := node.Prev
@@ -79,11 +126,14 @@ func (l *LRUCacheEntry) PrintNextNodes() {
 
 func testLRUCacheEntry() {
 
+	fmt.Println("<>------- Testing LRUCacheEntry double linked list -------<>")
+
 	head  := &LRUCacheEntry{0, nil, nil}
 	node1 := &LRUCacheEntry{1, nil, nil}
 	node2 := &LRUCacheEntry{2, nil, nil}
 	node3 := &LRUCacheEntry{3, nil, nil}
 	node4 := &LRUCacheEntry{4, nil, nil}
+	tail  := node4
 
 	head.Add(node1)
 	node1.Add(node2)
@@ -91,10 +141,27 @@ func testLRUCacheEntry() {
 	node3.Add(node4)
 
 	head.PrintNextNodes()
-	node4.PrintPrevNodes()
+	tail.PrintPrevNodes()
 
-	newList := head.MoveNodeToHead(node4)
-	newList.PrintNextNodes()
+	_, head = head.SwapNodes(node1)
+	head.PrintNextNodes()
+
+	return
+	_, head = head.SwapNodes(node2)
+	head.PrintNextNodes()
+
+	_, head = head.SwapNodes(node4)
+	head.PrintNextNodes()
+
+	return
+	/*head = head.SwapNodes(node2)
+	head.PrintNextNodes()
+
+	head = head.SwapNodes(node3)
+	head.PrintNextNodes()
+
+	head = head.SwapNodes(node4)
+	head.PrintNextNodes()*/
 }
 
 /* ------------------------------------------------ */
@@ -120,14 +187,14 @@ func (cache *LRUCache) Set(key, value int) {
 			cache.Head = node
 			cache.Tail = node
 		} else {
-			cache.Tail.Next = node
-			cache.Tail = node
+			cache.Tail = cache.Tail.Add(node)
 		}
 
 		cache.Contents[index] = node
 	} else {
 
 		cache.Contents[index].Value = value
+		cache.Tail = cache.Tail.MoveNodeToHead(cache.Contents[index])
 	}
 }
 
@@ -140,24 +207,27 @@ func (cache *LRUCache) Get(key int) int {
 		return -1
 	}
 
-	return cache.Contents[index].Value
+	cache.Head = cache.Head.MoveNodeToHead(cache.Contents[index])
+
+	return value.Value
 }
 
 func testLRUCache() {
 
+	fmt.Println("<>------- Testing LRUCache -------<>")
+
 	cache := &LRUCache{}
 
 	cache.Set(1, 20)
-	cache.Set(0, 5)
 	cache.Set(2, 8)
+	cache.Set(0, 5)
 	cache.Set(2, 19)
 	
-	fmt.Printf("------------->%d\n", cache.Get(1))
-	fmt.Printf("------------->%d\n", cache.Get(1))
+	fmt.Printf("------------->%d\n", cache.Get(2))
+	//fmt.Printf("------------->%d\n", cache.Get(0))
 
-	fmt.Printf("------------> %v\n", cache)
-
-	cache.Head.PrintNextNodes()
+	// cache.Head.PrintNextNodes()
+	//cache.Tail.PrintPrevNodes()
 }
 
 /* ------------------------------------------------ */
@@ -165,5 +235,7 @@ func testLRUCache() {
 func main() {
 
 	testLRUCacheEntry()
+	testLRUCache()
+
 	fmt.Println("Done!")
 }
